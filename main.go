@@ -15,19 +15,23 @@ import (
 var (
 	source  = flag.String("source", "", "--source ~/tmp")
 	output  = flag.String("output", "CHANGELOG.md", "--output CHANGELOG.md")
+	fetch   = flag.Bool("fetch", false, "--fetch")
 	verbose = flag.Bool("verbose", false, "--verbose")
 )
 
 type record struct {
-	Version string
-	Date    string
-	Commits []string
+	Version  string
+	Date     string
+	Features []string
+	BugFixes []string
 }
 
 func main() {
 	flag.Parse()
-	if err := fetchGitRepository(); err != nil {
-		panic(err)
+	if *fetch {
+		if err := fetchGitRepository(); err != nil {
+			panic(err)
+		}
 	}
 	gittags, err := getGitTags()
 	if err != nil {
@@ -76,24 +80,51 @@ func main() {
 			fmt.Println(string(gitcommits))
 		}
 		commits := strings.Split(string(gitcommits), "\n")
-		records[i].Commits = make([]string, 0, len(commits))
+		records[i].Features = make([]string, 0)
+		records[i].BugFixes = make([]string, 0)
 		for _, c := range commits {
-			cs := strings.SplitN(c, " ", 2)
+			msg, cs := c, strings.SplitN(c, " ", 2)
 			if len(cs) > 1 {
-				records[i].Commits = append(records[i].Commits, cs[1])
+				msg = cs[1]
+			}
+			if len(msg) == 0 {
+				continue
+			}
+			if strings.HasPrefix(msg, "[fix]") {
+				records[i].BugFixes = append(records[i].BugFixes, strings.TrimSpace(strings.TrimPrefix(msg, "[fix]")))
+			} else if strings.HasPrefix(msg, "[feat]") {
+				records[i].Features = append(records[i].Features, strings.TrimSpace(strings.TrimPrefix(msg, "[feat]")))
+			} else if strings.HasPrefix(msg, "[feature]") {
+				records[i].Features = append(records[i].Features, strings.TrimSpace(strings.TrimPrefix(msg, "[feature]")))
+			} else if strings.Contains(msg, "fix") {
+				records[i].BugFixes = append(records[i].BugFixes, msg)
 			} else {
-				records[i].Commits = append(records[i].Commits, c)
+				records[i].Features = append(records[i].Features, msg)
 			}
 		}
 	}
 	var buf bytes.Buffer
 	for i := len(records) - 1; i >= 0; i-- {
 		r := records[i]
-		buf.WriteString(fmt.Sprintf("# %s (%s)\n\n", r.Version, r.Date))
-		for _, c := range r.Commits {
-			if len(c) > 0 {
-				buf.WriteString(fmt.Sprintf("- %s\n", c))
+		buf.WriteString(fmt.Sprintf("# %s (%s)\n", strings.TrimPrefix(r.Version, "v"), r.Date))
+		if len(r.Features) > 0 {
+			buf.WriteString("\n### Features\n\n")
+			for _, c := range r.Features {
+				if len(c) > 0 {
+					buf.WriteString(fmt.Sprintf("- %s\n", c))
+				}
 			}
+		}
+		if len(r.BugFixes) > 0 {
+			buf.WriteString("\n### Bug Fixes\n\n")
+			for _, c := range r.BugFixes {
+				if len(c) > 0 {
+					buf.WriteString(fmt.Sprintf("- %s\n", c))
+				}
+			}
+		}
+		if i != 0 {
+			buf.WriteString("\n")
 		}
 	}
 	if err := ioutil.WriteFile(*output, buf.Bytes(), os.ModePerm); err != nil {
