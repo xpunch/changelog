@@ -2,17 +2,34 @@
 
 A tool help generate CHANGELOG.md from git.
 
-### Installation
+## Installation
+
 ```
 go install github.com/xpunch/changelog
 ```
 
-### Usage
+## Usage
+
+### under target git repository
+
 ```
-// cd target git repository
 changelog
 ```
-Or
+
+### print logs
+
 ```
-changelog --source ~/gitrepo --output ~/gitrepo/CHANGELOG.md --verbose
+changelog --verbose
+```
+
+### fetch latest repository
+
+```
+changelog --fetch
+```
+
+### set target repository folder and target CHANGELOG.md path
+
+```
+changelog --source ~/gitrepo --output ~/gitrepo/CHANGELOG.md --fetch --verbose
 ```
