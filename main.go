@@ -61,8 +61,13 @@ func main() {
 		}
 		return vs.LessThan(vt)
 	})
-	for i := 1; i < len(records); i++ {
-		gitcommits, err := getGitLogs(records[i-1].Version, records[i].Version)
+	for i := 0; i < len(records); i++ {
+		var v1, v2 string
+		if i > 0 {
+			v1 = records[i-1].Version
+		}
+		v2 = records[i].Version
+		gitcommits, err := getGitLogs(v1, v2)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -84,7 +89,7 @@ func main() {
 	var buf bytes.Buffer
 	for i := len(records) - 1; i >= 0; i-- {
 		r := records[i]
-		buf.WriteString(fmt.Sprintf("# %s (%s)\n", r.Version, r.Date))
+		buf.WriteString(fmt.Sprintf("# %s (%s)\n\n", r.Version, r.Date))
 		for _, c := range r.Commits {
 			if len(c) > 0 {
 				buf.WriteString(fmt.Sprintf("- %s\n", c))
