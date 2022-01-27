@@ -8,14 +8,18 @@ import (
 
 func git(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	cmd.Dir = dir
 	if *verbose {
 		fmt.Println(cmd.String())
 	}
-	err := cmd.Run()
-	return out.String(), err
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf(stderr.String())
+	}
+	return stdout.String(), nil
 }
 
 // fetchGitRepository will fetch latest commits and tags

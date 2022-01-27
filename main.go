@@ -30,12 +30,14 @@ func main() {
 	flag.Parse()
 	if *fetch {
 		if err := fetchGitRepository(); err != nil {
-			panic(err)
+			fmt.Println(err)
+			return
 		}
 	}
 	gittags, err := getGitTags()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 	if *verbose {
 		fmt.Println(gittags)
@@ -128,6 +130,7 @@ func main() {
 		}
 	}
 	if err := ioutil.WriteFile(*output, buf.Bytes(), os.ModePerm); err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 }

@@ -1,3 +1,8 @@
+# 1.2.0 (2022/01/27)
+
+### Bug Fixes
+- fixing no git error details issue
+
 # 1.1.0 (2022/01/17)
 
 ### Features
